@@ -1,220 +1,95 @@
-# 📃 Documentação Completa do Micro ERP Fiscal & Estoque – Eliel Diniz
+# 📃 Documentação Completa do Micro ERP Fiscal & Estoque
 
 > **Versão:** 2025‑06‑21 – *v1.2*
-> **Escopo:** Sistema Web modular para gestão de estoque e emissão de NF‑e, voltado a micro e pequenas empresas.
-> **Stack:** Node.js 20 + Express 4 | React 18 + Vite 5 | PostgreSQL 13 + Prisma 5 | node‑dfe 0.9.4
+> **Escopo:** Projeto demonstrativo de emissão de NF‑e com arquitetura modular.
+> **Stack:** Node.js 20 + Express 4 | PostgreSQL 13 + Prisma 5 | node‑dfe 0.9.4
 
 ---
 
 ## 🔄 Visão Geral do Projeto
 
-O Micro ERP oferece:
+Este projeto é baseado em um backend puro com Express, com foco na geração de NF-e através da biblioteca `node-dfe` e controle de entidades como empresas, clientes e produtos.
 
-* **Gestão de Empresas, Clientes e Produtos**
-* **Controle de Estoque** com movimentação automática
-* **Emissão de NF‑e 4.00** (homologação e produção) via **node‑dfe**
-* **Arquitetura limpa**, escalável e documentada, preparada para CI/CD e containerização
+> **⚠️ Atenção:** Este repositório não possui frontend. A aplicação é apenas backend e modularizada.
 
 ---
 
-## 🧱 Estrutura de Repositório (Monorepo)
+## 📂 Estrutura de Diretórios do Backend
 
 ```text
-📦 micro-erp/
-├── apps/
-│   ├── frontend/            # React + Vite (SPA)
-│   └── backend/             # Node.js + Express (REST)
-├── libs/                    # Bibliotecas utilitárias compartilhadas (ex: valida CPF/CNPJ)
-├── docker/                  # Dockerfiles, docker‑compose.yml, nginx.conf
-├── .github/workflows/       # GitHub Actions (lint, test, build, push‑image)
-├── docs/                    # Documentação gerada (MD, mermaid, PDF)
-├── .env*                    # Variáveis de ambiente (exemplo e real)
-└── README.md
-```
-
----
-
-## 🔧 Tecnologias e Versões Recomendadas
-
-| Camada       | Tecnologia         | Versão |
-| ------------ | ------------------ | ------ |
-| **Backend**  | Node.js            | 20.x   |
-|              | Express            | 4.x    |
-|              | node‑dfe           | ^0.9.4 |
-|              | dotenv             | ^16.3  |
-|              | Prisma ORM         | ^5.x   |
-|              | Winston (logs)     | ^3.x   |
-| **Banco**    | PostgreSQL         | ≥13    |
-| **Frontend** | React              | ^18.x  |
-|              | Vite               | ^5.x   |
-|              | TypeScript         | ^5.x   |
-|              | TailwindCSS        | ^3.x   |
-|              | Lucide‑react icons | 0.280  |
-| **DevOps**   | Docker Engine      | ≥24    |
-|              | GitHub Actions     | –      |
-
----
-
-## 🎓 Arquitetura da Aplicação
-
-A aplicação segue **arquitetura em camadas**, com responsabilidades isoladas:
-
-* **Controllers** → Recebem requisições HTTP, acionam serviços e retornam DTOs.
-* **Services** → Lógica de negócio (ex: cálculo de impostos, controle de estoque, emissão de NF‑e).
-* **Repositories (Prisma)** → Acesso ao banco PostgreSQL com tipagem forte.
-* **Middlewares** → Autenticação JWT, validação, rate‑limiting, error‑handler.
-* **Utils / Libs** → Criptografia, formatação de documentos, funções fiscais.
-
----
-
-## 📂 Estrutura Detalhada – Backend
-
-```text
-apps/backend/
+micro-erp-backend/
+├── prisma/                # Migrations e schema.prisma
 ├── src/
-│   ├── config/               # .env, certificados A1, prisma.config.ts
-│   ├── controllers/
-│   │   ├── AuthController.ts
-│   │   ├── CompanyController.ts
-│   │   └── NfeController.ts
-│   ├── services/
-│   │   ├── AuthService.ts
-│   │   ├── StockService.ts
-│   │   └── NfeService.ts
-│   ├── middlewares/
-│   │   ├── requireAuth.ts
-│   │   └── validateCpfCnpj.ts
+│   ├── config/           # Certificados, configurações e variáveis de ambiente
+│   ├── middlewares/     # Autenticação, validação de documentos
 │   ├── modules/
-│   │   ├── products/
 │   │   ├── clients/
-│   │   ├── stock/
-│   │   └── nfe/
-│   ├── prisma/
-│   │   ├── schema.prisma
-│   │   └── migrations/
-│   └── index.ts              # Bootstrap
-└── package.json
-```
-
-### 🔗 Fluxo de Emissão de NF‑e (Mermaid)
-
-```mermaid
-graph TD
-    A[Front: Pedido /emitir‑nfe] --> B[NfeController]
-    B --> C[AuthService: valida token]
-    C --> D[StockService: verifica saldo]
-    D --> E[NfeService: monta XML]
-    E --> F[node-dfe ➜ SEFAZ]
-    F -->|Protocolo| G[DB: salva XML + protocolo]
-    F -->|Erro| H[Retorna falha ao cliente]
+│   │   ├── company/
+│   │   ├── nfe/
+│   │   ├── products/
+│   │   └── stock/
+│   ├── routes/           # Rotas organizadas por domínio
+│   ├── utils/            # Validações e funções auxiliares
+│   └── index.ts          # Bootstrap da aplicação
+├── .env.simples          # Template para variáveis .env específicas da NF-e
+└── rest.http             # Arquivo de testes manuais de requisições
 ```
 
 ---
 
-## 📂 Estrutura Detalhada – Frontend
-
-```text
-apps/frontend/
-├── src/
-│   ├── pages/                # Dashboard, Empresas, Clientes, Produtos, NF‑e
-│   ├── components/           # UI reutilizável (Card, Modal, Table, Form)
-│   ├── hooks/                # useAuth, useClientes, useNfes
-│   ├── context/              # AuthContext, ToastContext
-│   ├── services/             # api.ts (axios), nfeService, productService
-│   └── App.tsx
-├── vite.config.ts
-├── tailwind.config.js
-└── package.json
-```
-
----
-
-## 🔐 Segurança e Conformidade
-
-| Área                      | Estratégia                                                       |
-| ------------------------- | ---------------------------------------------------------------- |
-| **Autenticação**          | JWT (RS256) + Refresh; senhas hash `bcrypt` 12 rounds            |
-| **Certificado A1 (.pfx)** | Armazenado criptografado (dotenv ou AWS Secrets); senha no vault |
-| **API Gateway**           | CORS restritivo, rate‑limiting, Helmet, audit‑logs               |
-| **Logs**                  | Winston + daily‑rotate + nível por ambiente                      |
-| **Infra**                 | Containers Docker; imagens slim; dependabot                      |
-
----
-
-## ⚙️ Como Rodar Localmente
-
-### Backend
-
-```bash
-cd apps/backend
-cp .env.example .env
-npm install
-npx prisma migrate dev
-npm run dev                # nodemon + ts-node
-```
-
-### Frontend
-
-```bash
-cd apps/frontend
-npm install
-npm run dev                # Vite dev server
-```
-
-### Exemplo de `.env`
+## 🔐 Variáveis de Ambiente (.env.simples)
 
 ```env
-PORT=3000
-DATABASE_URL="postgresql://user:pass@localhost:5432/microerp"
-JWT_SECRET=supersecret
-PFX_CERT_PATH=certificados/certificado.pfx
-CERT_PASSWORD=MinhaSenha123
+DATABASE_URL=
+MEU_DANFE_URL=
+
+# Ambiente da NFe: 1 = Produção, 2 = Homologação
+NFE_AMBIENTE=
+
+# Dados da Empresa / Emitente
+NFE_UF=
+NFE_CODIGO_MUNICIPIO=
+NFE_RAZAO_SOCIAL=
+NFE_NOME_FANTASIA=
+NFE_CNPJ=
+NFE_INSCRICAO_ESTADUAL=
+
+# Endereço
+NFE_ENDERECO_LOGRADOURO=
+NFE_ENDERECO_NUMERO=
+NFE_ENDERECO_BAIRRO=
+NFE_ENDERECO_CEP=
+NFE_ENDERECO_MUNICIPIO=
+NFE_ENDERECO_UF=
 ```
 
 ---
 
-## 🧪 Testes e Qualidade
+## 📄 Principais Funcionalidades
 
-| Camada        | Framework                               |
-| ------------- | --------------------------------------- |
-| **Backend**   | Jest + Supertest                        |
-| **Frontend**  | React Testing Library                   |
-| **E2E**       | Cypress                                 |
-| **Lint / CI** | ESLint, Prettier, Husky, GitHub Actions |
+* 📤 Emissão de NF-e modelo 55 versão 4.00
+* 🧾 Validação local de XML com xmllint
+* 🔐 Assinatura digital com certificado A1 (.pfx) via OpenSSL
+* 💬 Consulta de status da SEFAZ (Homologação e Produção)
 
 ---
 
-## 🔮 Futuras Expansões
+## 🛠️ Ferramentas Recomendadas
 
-1. **Integração Pagamentos** (Pix, Cartão)
-2. **Webhook SEFAZ** – monitoramento de eventos NF‑e
-3. **DANFE PDF** via pdf‑make
-4. **Dashboard Analítico** com gráficos (Recharts)
-5. **Multi‑tenant** com separação por schema PostgreSQL
+| Requisito | Versão Recomendada |
+| --------- | ------------------ |
+| Node.js   | 20.14.0            |
+| xmllint   | libxml 2.x         |
+| OpenSSL   | 1.1+               |
 
----
-
-## 📚 Referências
-
-* `node-dfe` – [https://github.com/nfephp/node-dfe](https://github.com/nfephp/node-dfe)
-* Manual Técnico NF‑e 4.00 – SEFAZ
-* Prisma ORM – [https://www.prisma.io](https://www.prisma.io)
-* Lucide‑react Icons – [https://lucide.dev](https://lucide.dev)
+> As bibliotecas xmllint e openssl devem estar disponíveis via terminal.
 
 ---
 
-## 💡 Decisões Arquiteturais (Resumo)
+## 💡 Considerações Finais
 
-| Tema                   | Decisão Chave             | Motivo                                                          |
-| ---------------------- | ------------------------- | --------------------------------------------------------------- |
-| **Modelo de deploy**   | Monorepo + Docker Compose | Simplifica orquestração local; pronto para evoluir a Kubernetes |
-| **Persistência**       | PostgreSQL + Prisma       | ACID, migrações automáticas, tipagem forte                      |
-| **Emissão NF‑e**       | node‑dfe com XML assinado | Conformidade legal e comunidade ativa                           |
-| **Auth**               | JWT RS256 + Refresh redis | Escalável e stateless                                           |
-| **Estratégia de logs** | Winston JSON + Graylog    | Observabilidade e auditoria fiscal                              |
+Este projeto serve como base sólida para aplicações que precisam emitir NF-e de forma fiscalmente correta, segura e modularizada. Ideal para ERP's, sistemas de e-commerce ou soluções personalizadas para PMEs.
 
----
+A documentação da SEFAZ deve ser sempre consultada para manter conformidade com os requisitos legais.
 
-> *Documento gerado a partir de prompts técnicos e decisões registradas durante o desenvolvimento.*
-
-
+📎 [Manual de Integração do Contribuinte – SEFAZ](https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=ndIjl+iEFdE=)
