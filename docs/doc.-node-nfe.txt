@@ -1,6 +1,3 @@
-Claro! Vou ajudar a criar uma documentação clara, profissional e organizada para a biblioteca **`nfe-seed-node`** que você está utilizando no seu Micro ERP, baseada nas informações que você enviou.
-
----
 
 # 📚 Documentação Técnica — Biblioteca `nfe-seed-node` para Emissão de NF-e
 
