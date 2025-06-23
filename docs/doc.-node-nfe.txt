@@ -109,6 +109,3 @@ A biblioteca `nfe-seed-node` oferece uma solução moderna, eficiente e segura p
 
 ---
 
-Se quiser, posso ajudar a criar exemplos práticos, guias de configuração detalhados ou até implementar a integração da biblioteca no seu backend Node.js.
-
-Quer que eu siga com isso?
